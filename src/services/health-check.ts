@@ -22,7 +22,8 @@ export async function checkCliInstalled(): Promise<{ installed: boolean; version
 
 export async function checkServiceRunning(): Promise<boolean> {
   try {
-    await execAsync(`${CLI_COMMAND} info`, { timeout: 5000 });
+    // Use 'ps' command instead of 'info' as it's more reliable across installations
+    await execAsync(`${CLI_COMMAND} ps`, { timeout: 5000 });
     return true;
   } catch {
     return false;
@@ -55,8 +56,8 @@ export async function performHealthCheck(): Promise<HealthStatus> {
         "The container service is not running. Please start it to use this application.\n\n" +
         "You can start the service with:\n" +
         "  container system start\n\n" +
-        "Or check if there are any issues with:\n" +
-        "  container info",
+        "Or verify by running:\n" +
+        "  container ps",
     };
   }
 
