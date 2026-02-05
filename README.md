@@ -1,5 +1,6 @@
-# contui
+# @rotorsoft/contui
 
+[![npm version](https://img.shields.io/npm/v/@rotorsoft/contui.svg)](https://www.npmjs.com/package/@rotorsoft/contui)
 [![CI](https://github.com/Rotorsoft/contui/actions/workflows/ci.yml/badge.svg)](https://github.com/Rotorsoft/contui/actions/workflows/ci.yml)
 [![Release](https://github.com/Rotorsoft/contui/actions/workflows/release.yml/badge.svg)](https://github.com/Rotorsoft/contui/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
