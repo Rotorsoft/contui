@@ -16,3 +16,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Configured semantic-release with changelog/npm/git plugins, added commitlint with conventional commits, set up husky commit-msg hook, created CI/release workflows, wrote comprehensive README and AGENT.md
 - Decisions: Used pnpm-compatible husky v9, semantic-release v24 with standard plugins, commitlint strict mode for subject-case
 - Issues: None
+
+[2026-02-05] #5 chore: Configure semantic-release commit message line length limits
+- Files: commitlint.config.js
+- Changes: Disabled body-max-line-length and footer-max-line-length rules to allow semantic-release notes and Co-Authored-By footers
+- Decisions: Set rules to severity 0 (disabled) rather than increasing limit to avoid arbitrary caps
+- Issues: None
