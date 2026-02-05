@@ -10,3 +10,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Complete TUI application using Ink (React for CLI) with container/image/network/volume management, vim-style navigation, search/filter, real-time refresh, help overlay
 - Decisions: Used Ink v5 for React-based TUI, wrapped macOS `container` CLI commands, used inverse text for selection highlighting
 - Issues: None - all acceptance criteria met
+
+[2026-02-05] #3 chore: Set up semantic releases and project documentation
+- Files: package.json, .releaserc.json, commitlint.config.js, .husky/commit-msg, .github/workflows/release.yml, .github/workflows/ci.yml, README.md, AGENT.md, progress.txt
+- Changes: Configured semantic-release with changelog/npm/git plugins, added commitlint with conventional commits, set up husky commit-msg hook, created CI/release workflows, wrote comprehensive README and AGENT.md
+- Decisions: Used pnpm-compatible husky v9, semantic-release v24 with standard plugins, commitlint strict mode for subject-case
+- Issues: None
