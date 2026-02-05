@@ -169,8 +169,10 @@ export class ContainerCliService {
   }
 
   async inspectContainer(idOrName: string): Promise<ContainerDetails> {
-    const output = await this.execCommand(`inspect ${idOrName} --format json`);
-    const data: MacOSContainerJson = JSON.parse(output);
+    const output = await this.execCommand(`inspect ${idOrName}`);
+    const parsed = JSON.parse(output);
+    // inspect returns an array
+    const data: MacOSContainerJson = Array.isArray(parsed) ? parsed[0] : parsed;
 
     const container = this.parseContainer(data);
     return {
@@ -234,8 +236,9 @@ export class ContainerCliService {
   }
 
   async inspectImage(idOrName: string): Promise<Record<string, unknown>> {
-    const output = await this.execCommand(`image inspect ${idOrName} --format json`);
-    return JSON.parse(output);
+    const output = await this.execCommand(`image inspect ${idOrName}`);
+    const parsed = JSON.parse(output);
+    return Array.isArray(parsed) ? parsed[0] : parsed;
   }
 
   async listNetworks(): Promise<Network[]> {
@@ -265,8 +268,9 @@ export class ContainerCliService {
   }
 
   async inspectNetwork(idOrName: string): Promise<Network> {
-    const output = await this.execCommand(`network inspect ${idOrName} --format json`);
-    const data: MacOSNetworkJson = JSON.parse(output);
+    const output = await this.execCommand(`network inspect ${idOrName}`);
+    const parsed = JSON.parse(output);
+    const data: MacOSNetworkJson = Array.isArray(parsed) ? parsed[0] : parsed;
 
     return {
       id: data.id,
@@ -304,8 +308,9 @@ export class ContainerCliService {
   }
 
   async inspectVolume(name: string): Promise<Volume> {
-    const output = await this.execCommand(`volume inspect ${name} --format json`);
-    const data: MacOSVolumeJson = JSON.parse(output);
+    const output = await this.execCommand(`volume inspect ${name}`);
+    const parsed = JSON.parse(output);
+    const data: MacOSVolumeJson = Array.isArray(parsed) ? parsed[0] : parsed;
 
     return {
       name: data.name,
