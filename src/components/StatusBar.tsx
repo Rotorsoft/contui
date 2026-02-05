@@ -2,12 +2,14 @@ import React from "react";
 import { Box, Text } from "ink";
 import Spinner from "ink-spinner";
 import type { Tab } from "../types/index.js";
+import type { ReleaseCheckState } from "../hooks/useReleaseCheck.js";
 
 interface StatusBarProps {
   activeTab: Tab;
   itemCount: number;
   error?: string | null;
   actionInProgress?: string | null;
+  releaseStatus?: ReleaseCheckState | null;
 }
 
 const TAB_ACTIONS: Record<Tab, string> = {
@@ -17,7 +19,27 @@ const TAB_ACTIONS: Record<Tab, string> = {
   volumes: "c:create d:delete i:inspect",
 };
 
-export function StatusBar({ activeTab, itemCount, error, actionInProgress }: StatusBarProps): React.ReactElement {
+function renderReleaseStatus(releaseStatus?: ReleaseCheckState | null): React.ReactNode {
+  if (!releaseStatus) return null;
+
+  if (releaseStatus.status === "update-available" && releaseStatus.latestVersion) {
+    return <Text color="yellow">Update available: v{releaseStatus.latestVersion}</Text>;
+  }
+
+  if (releaseStatus.status === "checking") {
+    return <Text dimColor>Checking for updates...</Text>;
+  }
+
+  return null;
+}
+
+export function StatusBar({
+  activeTab,
+  itemCount,
+  error,
+  actionInProgress,
+  releaseStatus,
+}: StatusBarProps): React.ReactElement {
   if (error) {
     return (
       <Box borderStyle="single" borderColor="red" paddingX={1}>
@@ -37,14 +59,18 @@ export function StatusBar({ activeTab, itemCount, error, actionInProgress }: Sta
     );
   }
 
+  const releaseContent = renderReleaseStatus(releaseStatus);
+
   return (
     <Box borderStyle="single" paddingX={1} justifyContent="space-between">
       <Text>
         <Text color="cyan">{itemCount}</Text> {activeTab} | {TAB_ACTIONS[activeTab]}
       </Text>
-      <Text dimColor>
-        h/l:tabs j/k:navigate /:search r:refresh ?:help q:quit
-      </Text>
+      {releaseContent ?? (
+        <Text dimColor>
+          h/l:tabs j/k:navigate /:search r:refresh ?:help q:quit
+        </Text>
+      )}
     </Box>
   );
 }

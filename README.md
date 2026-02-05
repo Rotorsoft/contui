@@ -28,6 +28,23 @@ A terminal UI for managing containers on macOS using the native `container` CLI.
 
 ## Installation
 
+### Download and Run (npm)
+
+```bash
+# Install globally
+npm install -g @rotorsoft/contui
+
+# Run the CLI
+contui
+```
+
+```bash
+# Or run without installing
+npx @rotorsoft/contui
+```
+
+### From Source (pnpm)
+
 ```bash
 # Clone the repository
 git clone https://github.com/Rotorsoft/contui.git

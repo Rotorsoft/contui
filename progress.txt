@@ -28,3 +28,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Updated package name to @rotorsoft/contui, added publishConfig.access=public for scoped public publishing, added npm version badge to README
 - Decisions: Scoped packages require explicit public access; semantic-release npm plugin handles scoped packages without config changes
 - Issues: None - CI npm token must have @rotorsoft scope permissions
+
+[2026-02-05] #9 fix: Add npm-only dist packaging and release update UX
+- Files: package.json, jest.config.js, README.md, src/components/App.tsx, src/components/StatusBar.tsx, src/hooks/useReleaseCheck.ts, src/utils/app-version.ts, src/types/ink-testing-library.d.ts, src/__tests__/release-check.test.ts, src/__tests__/status-bar.test.tsx
+- Changes: Restricted npm package contents to dist, added version display and async release check in the UI, and documented npm install/run steps with supporting tests.
+- Decisions: Pulled current version from env/package.json and used npm registry latest endpoint for update checks.
+- Issues: Release workflow may still need updates to publish; requires approval to modify .github/workflows.

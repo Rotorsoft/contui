@@ -16,10 +16,14 @@ import { CreateDialog } from "./CreateDialog.js";
 import { PullDialog } from "./PullDialog.js";
 import { useContainerData } from "../hooks/useContainerData.js";
 import { useKeyboard } from "../hooks/useKeyboard.js";
+import { useReleaseCheck } from "../hooks/useReleaseCheck.js";
 import { containerCli } from "../services/container-cli.js";
+import { getAppVersion } from "../utils/app-version.js";
 import type { Tab } from "../types/index.js";
 
 type DialogType = "confirm" | "create" | "pull" | "logs" | "inspect" | null;
+
+const APP_VERSION = getAppVersion();
 
 // Truncate large objects to prevent rendering performance issues
 function truncateData(obj: unknown, maxDepth = 4, maxArrayLength = 20, maxStringLength = 200): unknown {
@@ -61,6 +65,7 @@ interface DialogState {
 export function App(): React.ReactElement {
   const { exit } = useApp();
   const { containers, images, networks, volumes, loading, error, refresh } = useContainerData();
+  const releaseStatus = useReleaseCheck({ packageName: "@rotorsoft/contui", currentVersion: APP_VERSION });
 
   const [activeTab, setActiveTab] = useState<Tab>("containers");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -440,10 +445,10 @@ export function App(): React.ReactElement {
   }
 
   return (
-    <Box flexDirection="column" height="100%">
+      <Box flexDirection="column" height="100%">
       <Box marginBottom={0}>
         <Text bold color="cyan">
-          contui
+          contui v{APP_VERSION}
         </Text>
         <Text dimColor> - Container Management TUI</Text>
       </Box>
@@ -494,6 +499,7 @@ export function App(): React.ReactElement {
         itemCount={getItemCount()}
         error={error || actionError}
         actionInProgress={actionInProgress}
+        releaseStatus={releaseStatus}
       />
     </Box>
   );
