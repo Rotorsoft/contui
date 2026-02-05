@@ -14,7 +14,7 @@ export default {
         tsconfig: {
           jsx: "react-jsx",
           module: "ESNext",
-          moduleResolution: "Node",
+          moduleResolution: "NodeNext",
         },
       },
     ],
