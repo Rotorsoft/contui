@@ -22,3 +22,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Disabled body-max-line-length and footer-max-line-length rules to allow semantic-release notes and Co-Authored-By footers
 - Decisions: Set rules to severity 0 (disabled) rather than increasing limit to avoid arbitrary caps
 - Issues: None
+
+[2026-02-05] #7 chore: Configure npm publishing to use @rotorsoft namespace
+- Files: package.json, README.md
+- Changes: Updated package name to @rotorsoft/contui, added publishConfig.access=public for scoped public publishing, added npm version badge to README
+- Decisions: Scoped packages require explicit public access; semantic-release npm plugin handles scoped packages without config changes
+- Issues: None - CI npm token must have @rotorsoft scope permissions
