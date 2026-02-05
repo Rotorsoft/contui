@@ -70,7 +70,7 @@ interface MacOSVolumeJson {
   driver: string;
   source: string;
   sizeInBytes?: number;
-  createdAt?: number;
+  createdAt?: number | string; // number from ls, string from inspect
   format?: string;
 }
 
@@ -134,7 +134,11 @@ export class ContainerCliService {
     }));
   }
 
-  private formatDate(timestamp: number): string {
+  private formatDate(timestamp: number | string): string {
+    // If it's already a string (ISO date), return it
+    if (typeof timestamp === "string") {
+      return timestamp;
+    }
     // macOS container uses Core Foundation absolute time (seconds since Jan 1, 2001)
     const cfEpoch = new Date("2001-01-01T00:00:00Z").getTime();
     const date = new Date(cfEpoch + timestamp * 1000);
