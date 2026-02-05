@@ -14,6 +14,66 @@ const execAsync = promisify(exec);
 
 const CLI_COMMAND = "container";
 
+interface MacOSContainerJson {
+  configuration: {
+    id: string;
+    image: {
+      reference: string;
+      descriptor?: { digest?: string };
+    };
+    publishedPorts?: Array<{
+      hostPort: number;
+      containerPort: number;
+      proto: string;
+    }>;
+    initProcess?: {
+      arguments?: string[];
+      executable?: string;
+    };
+  };
+  status: string;
+  startedDate?: number;
+  networks?: Array<{
+    ipv4Address?: string;
+    ipv4Gateway?: string;
+    hostname?: string;
+    network?: string;
+  }>;
+}
+
+interface MacOSImageJson {
+  reference: string;
+  fullSize: string;
+  descriptor: {
+    digest: string;
+    annotations?: {
+      "org.opencontainers.image.created"?: string;
+    };
+  };
+}
+
+interface MacOSNetworkJson {
+  id: string;
+  state: string;
+  config: {
+    mode: string;
+    creationDate?: number;
+  };
+  status?: {
+    ipv4Gateway?: string;
+    ipv4Subnet?: string;
+  };
+}
+
+interface MacOSVolumeJson {
+  name: string;
+  driver: string;
+  source: string;
+  sizeInBytes?: number;
+  createdAt?: number;
+  format?: string;
+}
+
 export class ContainerCliService {
   private async execCommand(args: string): Promise<string> {
     try {
@@ -31,61 +91,54 @@ export class ContainerCliService {
   }
 
   async listContainers(all = true): Promise<Container[]> {
-    const args = all ? "ps -a --format json" : "ps --format json";
+    const args = all ? "ls --all --format json" : "ls --format json";
     const output = await this.execCommand(args);
 
     if (!output) return [];
 
-    return output
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) => this.parseContainerJson(JSON.parse(line)));
+    const containers: MacOSContainerJson[] = JSON.parse(output);
+    return containers.map((c) => this.parseContainer(c));
   }
 
-  private parseContainerJson(data: Record<string, unknown>): Container {
-    const status = this.parseStatus(String(data.State || data.Status || ""));
+  private parseContainer(data: MacOSContainerJson): Container {
+    const config = data.configuration;
     return {
-      id: String(data.ID || data.Id || "").substring(0, 12),
-      name: String(data.Names || data.Name || "").replace(/^\//, ""),
-      image: String(data.Image || ""),
-      status,
-      state: String(data.State || data.Status || ""),
-      ports: this.parsePorts(String(data.Ports || "")),
-      created: String(data.CreatedAt || data.Created || ""),
-      command: String(data.Command || ""),
+      id: config.id,
+      name: config.id,
+      image: config.image.reference,
+      status: this.parseStatus(data.status),
+      state: data.status,
+      ports: this.parsePublishedPorts(config.publishedPorts || []),
+      created: data.startedDate ? this.formatDate(data.startedDate) : "",
+      command: config.initProcess?.arguments?.join(" ") || config.initProcess?.executable || "",
     };
   }
 
   private parseStatus(state: string): ContainerStatus {
     const lower = state.toLowerCase();
-    if (lower.includes("running") || lower === "running" || lower.startsWith("up")) return "running";
-    if (lower.includes("paused")) return "paused";
-    if (lower.includes("restarting")) return "restarting";
-    if (lower.includes("dead")) return "dead";
-    if (lower.includes("created")) return "created";
+    if (lower === "running") return "running";
+    if (lower === "paused") return "paused";
+    if (lower === "restarting") return "restarting";
+    if (lower === "dead") return "dead";
+    if (lower === "created") return "created";
     return "stopped";
   }
 
-  private parsePorts(portsStr: string): PortMapping[] {
-    if (!portsStr) return [];
+  private parsePublishedPorts(
+    ports: Array<{ hostPort: number; containerPort: number; proto: string }>
+  ): PortMapping[] {
+    return ports.map((p) => ({
+      hostPort: p.hostPort,
+      containerPort: p.containerPort,
+      protocol: (p.proto || "tcp") as "tcp" | "udp",
+    }));
+  }
 
-    const ports: PortMapping[] = [];
-    const portMatches = portsStr.matchAll(/(\d+)->(\d+)\/(tcp|udp)/g);
-
-    for (const match of portMatches) {
-      const hostPort = match[1];
-      const containerPort = match[2];
-      const protocol = match[3];
-      if (hostPort && containerPort && protocol) {
-        ports.push({
-          hostPort: parseInt(hostPort, 10),
-          containerPort: parseInt(containerPort, 10),
-          protocol: protocol as "tcp" | "udp",
-        });
-      }
-    }
-
-    return ports;
+  private formatDate(timestamp: number): string {
+    // macOS container uses Core Foundation absolute time (seconds since Jan 1, 2001)
+    const cfEpoch = new Date("2001-01-01T00:00:00Z").getTime();
+    const date = new Date(cfEpoch + timestamp * 1000);
+    return date.toISOString();
   }
 
   async startContainer(idOrName: string): Promise<void> {
@@ -97,103 +150,92 @@ export class ContainerCliService {
   }
 
   async restartContainer(idOrName: string): Promise<void> {
-    await this.execCommand(`restart ${idOrName}`);
+    await this.execCommand(`stop ${idOrName}`);
+    await this.execCommand(`start ${idOrName}`);
   }
 
-  async removeContainer(idOrName: string, force = false): Promise<void> {
-    const args = force ? `rm -f ${idOrName}` : `rm ${idOrName}`;
-    await this.execCommand(args);
+  async removeContainer(idOrName: string, _force = false): Promise<void> {
+    // macOS container CLI uses 'delete' or 'rm'
+    await this.execCommand(`delete ${idOrName}`);
   }
 
   async getContainerLogs(idOrName: string, tail = 100): Promise<string> {
-    return this.execCommand(`logs --tail ${tail} ${idOrName}`);
+    try {
+      return await this.execCommand(`logs --tail ${tail} ${idOrName}`);
+    } catch {
+      // logs command might not support --tail
+      return await this.execCommand(`logs ${idOrName}`);
+    }
   }
 
   async inspectContainer(idOrName: string): Promise<ContainerDetails> {
-    const output = await this.execCommand(`inspect ${idOrName}`);
-    const data = JSON.parse(output);
-    const containerData = Array.isArray(data) ? data[0] : data;
+    const output = await this.execCommand(`inspect ${idOrName} --format json`);
+    const data: MacOSContainerJson = JSON.parse(output);
 
+    const container = this.parseContainer(data);
     return {
-      id: String(containerData.Id || "").substring(0, 12),
-      name: String(containerData.Name || "").replace(/^\//, ""),
-      image: String(containerData.Config?.Image || containerData.Image || ""),
-      status: this.parseStatus(String(containerData.State?.Status || "")),
-      state: String(containerData.State?.Status || ""),
-      ports: this.parsePortBindings(containerData.NetworkSettings?.Ports || {}),
-      created: String(containerData.Created || ""),
-      command: Array.isArray(containerData.Config?.Cmd)
-        ? containerData.Config.Cmd.join(" ")
-        : String(containerData.Config?.Cmd || ""),
+      ...container,
       networkSettings: {
-        ipAddress: containerData.NetworkSettings?.IPAddress,
-        gateway: containerData.NetworkSettings?.Gateway,
-        networks: containerData.NetworkSettings?.Networks,
+        ipAddress: data.networks?.[0]?.ipv4Address?.split("/")[0],
+        gateway: data.networks?.[0]?.ipv4Gateway,
+        networks: data.networks?.reduce(
+          (acc, n) => {
+            if (n.network) {
+              acc[n.network] = { ipAddress: n.ipv4Address?.split("/")[0] };
+            }
+            return acc;
+          },
+          {} as Record<string, { ipAddress?: string }>
+        ),
       },
-      mounts: containerData.Mounts,
       config: {
-        env: containerData.Config?.Env,
-        workingDir: containerData.Config?.WorkingDir,
-        entrypoint: containerData.Config?.Entrypoint,
-        cmd: containerData.Config?.Cmd,
+        cmd: data.configuration.initProcess?.arguments,
+        entrypoint: data.configuration.initProcess?.executable
+          ? [data.configuration.initProcess.executable]
+          : undefined,
       },
     };
   }
 
-  private parsePortBindings(ports: Record<string, Array<{ HostPort: string }> | null>): PortMapping[] {
-    const mappings: PortMapping[] = [];
-
-    for (const [containerPort, hostBindings] of Object.entries(ports)) {
-      if (!hostBindings) continue;
-
-      const [port, protocol] = containerPort.split("/");
-      for (const binding of hostBindings) {
-        if (port && binding.HostPort) {
-          mappings.push({
-            hostPort: parseInt(binding.HostPort, 10),
-            containerPort: parseInt(port, 10),
-            protocol: (protocol || "tcp") as "tcp" | "udp",
-          });
-        }
-      }
-    }
-
-    return mappings;
-  }
-
   async listImages(): Promise<Image[]> {
-    const output = await this.execCommand("images --format json");
+    const output = await this.execCommand("image ls --format json");
 
     if (!output) return [];
 
-    return output
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) => {
-        const data = JSON.parse(line);
-        return {
-          id: String(data.ID || data.Id || "").substring(0, 12),
-          repository: String(data.Repository || "<none>"),
-          tag: String(data.Tag || "<none>"),
-          size: String(data.Size || ""),
-          created: String(data.CreatedAt || data.CreatedSince || ""),
-        };
-      });
+    const images: MacOSImageJson[] = JSON.parse(output);
+    return images.map((img) => this.parseImage(img));
+  }
+
+  private parseImage(data: MacOSImageJson): Image {
+    const [repository, tag] = this.parseImageReference(data.reference);
+    return {
+      id: data.descriptor.digest.substring(7, 19),
+      repository,
+      tag,
+      size: data.fullSize,
+      created: data.descriptor.annotations?.["org.opencontainers.image.created"] || "",
+    };
+  }
+
+  private parseImageReference(reference: string): [string, string] {
+    const lastColon = reference.lastIndexOf(":");
+    if (lastColon === -1 || reference.includes("/", lastColon)) {
+      return [reference, "latest"];
+    }
+    return [reference.substring(0, lastColon), reference.substring(lastColon + 1)];
   }
 
   async pullImage(name: string): Promise<void> {
-    await this.execCommand(`pull ${name}`);
+    await this.execCommand(`image pull ${name}`);
   }
 
-  async removeImage(idOrName: string, force = false): Promise<void> {
-    const args = force ? `rmi -f ${idOrName}` : `rmi ${idOrName}`;
-    await this.execCommand(args);
+  async removeImage(idOrName: string, _force = false): Promise<void> {
+    await this.execCommand(`image delete ${idOrName}`);
   }
 
   async inspectImage(idOrName: string): Promise<Record<string, unknown>> {
-    const output = await this.execCommand(`image inspect ${idOrName}`);
-    const data = JSON.parse(output);
-    return Array.isArray(data) ? data[0] : data;
+    const output = await this.execCommand(`image inspect ${idOrName} --format json`);
+    return JSON.parse(output);
   }
 
   async listNetworks(): Promise<Network[]> {
@@ -201,41 +243,39 @@ export class ContainerCliService {
 
     if (!output) return [];
 
-    return output
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) => {
-        const data = JSON.parse(line);
-        return {
-          id: String(data.ID || data.Id || "").substring(0, 12),
-          name: String(data.Name || ""),
-          driver: String(data.Driver || ""),
-          scope: String(data.Scope || ""),
-        };
-      });
+    const networks: MacOSNetworkJson[] = JSON.parse(output);
+    return networks.map((net) => ({
+      id: net.id,
+      name: net.id,
+      driver: net.config.mode,
+      scope: "local",
+      ipam: {
+        subnet: net.status?.ipv4Subnet,
+        gateway: net.status?.ipv4Gateway,
+      },
+    }));
   }
 
-  async createNetwork(name: string, driver = "bridge"): Promise<void> {
-    await this.execCommand(`network create --driver ${driver} ${name}`);
+  async createNetwork(name: string, _driver = "nat"): Promise<void> {
+    await this.execCommand(`network create ${name}`);
   }
 
   async removeNetwork(idOrName: string): Promise<void> {
-    await this.execCommand(`network rm ${idOrName}`);
+    await this.execCommand(`network delete ${idOrName}`);
   }
 
   async inspectNetwork(idOrName: string): Promise<Network> {
-    const output = await this.execCommand(`network inspect ${idOrName}`);
-    const data = JSON.parse(output);
-    const networkData = Array.isArray(data) ? data[0] : data;
+    const output = await this.execCommand(`network inspect ${idOrName} --format json`);
+    const data: MacOSNetworkJson = JSON.parse(output);
 
     return {
-      id: String(networkData.Id || "").substring(0, 12),
-      name: String(networkData.Name || ""),
-      driver: String(networkData.Driver || ""),
-      scope: String(networkData.Scope || ""),
+      id: data.id,
+      name: data.id,
+      driver: data.config.mode,
+      scope: "local",
       ipam: {
-        subnet: networkData.IPAM?.Config?.[0]?.Subnet,
-        gateway: networkData.IPAM?.Config?.[0]?.Gateway,
+        subnet: data.status?.ipv4Subnet,
+        gateway: data.status?.ipv4Gateway,
       },
     };
   }
@@ -245,40 +285,34 @@ export class ContainerCliService {
 
     if (!output) return [];
 
-    return output
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) => {
-        const data = JSON.parse(line);
-        return {
-          name: String(data.Name || ""),
-          driver: String(data.Driver || ""),
-          mountpoint: String(data.Mountpoint || ""),
-          scope: String(data.Scope || "local"),
-        };
-      });
+    const volumes: MacOSVolumeJson[] = JSON.parse(output);
+    return volumes.map((vol) => ({
+      name: vol.name,
+      driver: vol.driver,
+      mountpoint: vol.source,
+      scope: "local",
+      created: vol.createdAt ? this.formatDate(vol.createdAt) : undefined,
+    }));
   }
 
   async createVolume(name: string): Promise<void> {
     await this.execCommand(`volume create ${name}`);
   }
 
-  async removeVolume(name: string, force = false): Promise<void> {
-    const args = force ? `volume rm -f ${name}` : `volume rm ${name}`;
-    await this.execCommand(args);
+  async removeVolume(name: string, _force = false): Promise<void> {
+    await this.execCommand(`volume delete ${name}`);
   }
 
   async inspectVolume(name: string): Promise<Volume> {
-    const output = await this.execCommand(`volume inspect ${name}`);
-    const data = JSON.parse(output);
-    const volumeData = Array.isArray(data) ? data[0] : data;
+    const output = await this.execCommand(`volume inspect ${name} --format json`);
+    const data: MacOSVolumeJson = JSON.parse(output);
 
     return {
-      name: String(volumeData.Name || ""),
-      driver: String(volumeData.Driver || ""),
-      mountpoint: String(volumeData.Mountpoint || ""),
-      scope: String(volumeData.Scope || "local"),
-      created: String(volumeData.CreatedAt || ""),
+      name: data.name,
+      driver: data.driver,
+      mountpoint: data.source,
+      scope: "local",
+      created: data.createdAt ? this.formatDate(data.createdAt) : undefined,
     };
   }
 
@@ -288,7 +322,7 @@ export class ContainerCliService {
 
   async ping(): Promise<boolean> {
     try {
-      await this.execCommand("info");
+      await this.execCommand("ls");
       return true;
     } catch {
       return false;

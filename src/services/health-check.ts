@@ -22,8 +22,8 @@ export async function checkCliInstalled(): Promise<{ installed: boolean; version
 
 export async function checkServiceRunning(): Promise<boolean> {
   try {
-    // Use 'ps' command instead of 'info' as it's more reliable across installations
-    await execAsync(`${CLI_COMMAND} ps`, { timeout: 5000 });
+    // Use 'ls' command - macOS container CLI uses 'ls' not 'ps'
+    await execAsync(`${CLI_COMMAND} ls`, { timeout: 5000 });
     return true;
   } catch {
     return false;

@@ -1,5 +1,3 @@
-import { describe, it, expect } from "@jest/globals";
-
 // Test the health check logic without actual exec calls
 describe("Health Check Logic", () => {
   describe("HealthStatus interface", () => {
