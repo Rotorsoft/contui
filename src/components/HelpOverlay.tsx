@@ -9,11 +9,11 @@ const HELP_SECTIONS = [
   {
     title: "Navigation",
     items: [
-      { key: "j / Down", desc: "Move down" },
-      { key: "k / Up", desc: "Move up" },
+      { key: "h / l", desc: "Previous / Next tab" },
+      { key: "j / k", desc: "Move down / up" },
       { key: "Enter", desc: "Select / Expand" },
       { key: "Esc", desc: "Go back / Close" },
-      { key: "1-4", desc: "Switch tabs" },
+      { key: "1-4", desc: "Switch to tab directly" },
     ],
   },
   {
@@ -23,7 +23,7 @@ const HELP_SECTIONS = [
       { key: "x", desc: "Stop container" },
       { key: "R", desc: "Restart container" },
       { key: "d", desc: "Delete (remove)" },
-      { key: "l", desc: "View logs" },
+      { key: "L", desc: "View logs" },
       { key: "i", desc: "Inspect details" },
     ],
   },

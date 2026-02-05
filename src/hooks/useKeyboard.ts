@@ -14,6 +14,7 @@ interface UseKeyboardOptions {
   onAction: (action: string) => void;
   isSearchMode: boolean;
   isDetailView: boolean;
+  activeTab: Tab;
 }
 
 const TAB_KEYS: Record<string, Tab> = {
@@ -22,6 +23,8 @@ const TAB_KEYS: Record<string, Tab> = {
   "3": "networks",
   "4": "volumes",
 };
+
+const TAB_ORDER: Tab[] = ["containers", "images", "networks", "volumes"];
 
 export function useKeyboard(options: UseKeyboardOptions): void {
   const {
@@ -36,6 +39,7 @@ export function useKeyboard(options: UseKeyboardOptions): void {
     onAction,
     isSearchMode,
     isDetailView,
+    activeTab,
   } = options;
 
   const handleInput = useCallback(
@@ -120,8 +124,22 @@ export function useKeyboard(options: UseKeyboardOptions): void {
         return;
       }
 
-      if (input === "l") {
+      if (input === "L") {
         onAction("logs");
+        return;
+      }
+
+      if (input === "h") {
+        const currentIndex = TAB_ORDER.indexOf(activeTab);
+        const newIndex = currentIndex > 0 ? currentIndex - 1 : TAB_ORDER.length - 1;
+        onTabChange(TAB_ORDER[newIndex] as Tab);
+        return;
+      }
+
+      if (input === "l") {
+        const currentIndex = TAB_ORDER.indexOf(activeTab);
+        const newIndex = currentIndex < TAB_ORDER.length - 1 ? currentIndex + 1 : 0;
+        onTabChange(TAB_ORDER[newIndex] as Tab);
         return;
       }
 
@@ -143,6 +161,7 @@ export function useKeyboard(options: UseKeyboardOptions): void {
     [
       isSearchMode,
       isDetailView,
+      activeTab,
       onQuit,
       onBack,
       onTabChange,

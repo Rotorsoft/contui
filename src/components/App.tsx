@@ -21,6 +21,33 @@ import type { Tab } from "../types/index.js";
 
 type DialogType = "confirm" | "create" | "pull" | "logs" | "inspect" | null;
 
+// Truncate large objects to prevent rendering performance issues
+function truncateData(obj: unknown, maxDepth = 4, maxArrayLength = 20, maxStringLength = 200): unknown {
+  if (maxDepth <= 0) return "[truncated]";
+
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "string") {
+    return obj.length > maxStringLength ? obj.substring(0, maxStringLength) + "..." : obj;
+  }
+
+  if (typeof obj !== "object") return obj;
+
+  if (Array.isArray(obj)) {
+    const truncated = obj.slice(0, maxArrayLength).map(item => truncateData(item, maxDepth - 1, maxArrayLength, maxStringLength));
+    if (obj.length > maxArrayLength) {
+      truncated.push(`[...${obj.length - maxArrayLength} more items]`);
+    }
+    return truncated;
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = truncateData(value, maxDepth - 1, maxArrayLength, maxStringLength);
+  }
+  return result;
+}
+
 interface DialogState {
   type: DialogType;
   message?: string;
@@ -43,6 +70,7 @@ export function App(): React.ReactElement {
   const [showHelp, setShowHelp] = useState(false);
   const [dialog, setDialog] = useState<DialogState>({ type: null });
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
   const getItemCount = useCallback((): number => {
     switch (activeTab) {
@@ -72,6 +100,7 @@ export function App(): React.ReactElement {
 
   const handleNavigate = useCallback(
     (direction: "up" | "down") => {
+      setActionError(null);
       const count = getItemCount();
       if (count === 0) return;
 
@@ -87,6 +116,7 @@ export function App(): React.ReactElement {
   );
 
   const handleSelect = useCallback(async () => {
+    setActionError(null);
     try {
       let inspectData: Record<string, unknown> = {};
 
@@ -123,24 +153,26 @@ export function App(): React.ReactElement {
         }
       }
 
-      setDialog({ type: "inspect", data: inspectData });
+      setDialog({ type: "inspect", data: truncateData(inspectData) as Record<string, unknown> });
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to inspect");
     }
   }, [activeTab, selectedIndex, containers, images, networks, volumes]);
 
   const handleBack = useCallback(() => {
+    setActionError(null);
     if (searchMode) {
       setSearchMode(false);
       setSearchInput("");
     } else if (dialog.type) {
-      setDialog({ type: null });
+      setDialog({ type: null, data: undefined, logs: undefined });
     } else if (showHelp) {
       setShowHelp(false);
     }
   }, [searchMode, dialog.type, showHelp]);
 
   const handleSearch = useCallback(() => {
+    setActionError(null);
     setSearchMode(true);
     setSearchInput(searchQuery);
   }, [searchQuery]);
@@ -152,6 +184,7 @@ export function App(): React.ReactElement {
   }, [searchInput]);
 
   const handleHelp = useCallback(() => {
+    setActionError(null);
     setShowHelp((prev: boolean) => !prev);
   }, []);
 
@@ -209,22 +242,28 @@ export function App(): React.ReactElement {
         switch (action) {
           case "start":
             if (activeTab === "containers") {
+              setActionInProgress(`Starting ${itemName}...`);
               await containerCli.startContainer(itemId);
               await refresh();
+              setActionInProgress(null);
             }
             break;
 
           case "stop":
             if (activeTab === "containers") {
+              setActionInProgress(`Stopping ${itemName}...`);
               await containerCli.stopContainer(itemId);
               await refresh();
+              setActionInProgress(null);
             }
             break;
 
           case "restart":
             if (activeTab === "containers") {
+              setActionInProgress(`Restarting ${itemName}...`);
               await containerCli.restartContainer(itemId);
               await refresh();
+              setActionInProgress(null);
             }
             break;
 
@@ -233,6 +272,7 @@ export function App(): React.ReactElement {
               type: "confirm",
               message: `Are you sure you want to delete ${itemName}?`,
               action: async () => {
+                setActionInProgress(`Deleting ${itemName}...`);
                 switch (activeTab) {
                   case "containers":
                     await containerCli.removeContainer(itemId, true);
@@ -249,22 +289,28 @@ export function App(): React.ReactElement {
                 }
                 await refresh();
                 setSelectedIndex((prev: number) => Math.max(0, prev - 1));
+                setActionInProgress(null);
               },
             });
             break;
 
           case "logs":
             if (activeTab === "containers") {
+              setActionInProgress(`Fetching logs...`);
               const logs = await containerCli.getContainerLogs(itemId);
+              setActionInProgress(null);
               setDialog({ type: "logs", logs, containerName: itemName });
             }
             break;
 
           case "inspect":
+            setActionInProgress(`Loading details...`);
             await handleSelect();
+            setActionInProgress(null);
             break;
         }
       } catch (err) {
+        setActionInProgress(null);
         setActionError(err instanceof Error ? err.message : "Action failed");
       }
     },
@@ -276,19 +322,23 @@ export function App(): React.ReactElement {
       try {
         await dialog.action();
       } catch (err) {
+        setActionInProgress(null);
         setActionError(err instanceof Error ? err.message : "Action failed");
       }
     }
-    setDialog({ type: null });
+    setDialog({ type: null, data: undefined, logs: undefined });
   }, [dialog]);
 
   const handlePullConfirm = useCallback(
     async (imageName: string) => {
-      setDialog({ type: null });
+      setDialog({ type: null, data: undefined, logs: undefined });
+      setActionInProgress(`Pulling ${imageName}...`);
       try {
         await containerCli.pullImage(imageName);
         await refresh();
+        setActionInProgress(null);
       } catch (err) {
+        setActionInProgress(null);
         setActionError(err instanceof Error ? err.message : "Failed to pull image");
       }
     },
@@ -297,7 +347,8 @@ export function App(): React.ReactElement {
 
   const handleCreateConfirm = useCallback(
     async (name: string) => {
-      setDialog({ type: null });
+      setDialog({ type: null, data: undefined, logs: undefined });
+      setActionInProgress(`Creating ${name}...`);
       try {
         if (dialog.createType === "network") {
           await containerCli.createNetwork(name);
@@ -305,7 +356,9 @@ export function App(): React.ReactElement {
           await containerCli.createVolume(name);
         }
         await refresh();
+        setActionInProgress(null);
       } catch (err) {
+        setActionInProgress(null);
         setActionError(err instanceof Error ? err.message : "Failed to create");
       }
     },
@@ -313,7 +366,7 @@ export function App(): React.ReactElement {
   );
 
   const handleCancel = useCallback(() => {
-    setDialog({ type: null });
+    setDialog({ type: null, data: undefined, logs: undefined });
   }, []);
 
   useKeyboard({
@@ -328,6 +381,7 @@ export function App(): React.ReactElement {
     onAction: handleAction,
     isSearchMode: searchMode,
     isDetailView: dialog.type === "logs" || dialog.type === "inspect",
+    activeTab,
   });
 
   if (loading && containers.length === 0) {
@@ -439,6 +493,7 @@ export function App(): React.ReactElement {
         activeTab={activeTab}
         itemCount={getItemCount()}
         error={error || actionError}
+        actionInProgress={actionInProgress}
       />
     </Box>
   );
