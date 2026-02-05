@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/Rotorsoft/contui/compare/v1.0.0...v1.0.1) (2026-02-05)
+
+
+### Bug Fixes
+
+* improve release packaging and update ux ([3440d1f](https://github.com/Rotorsoft/contui/commit/3440d1f7699826230430e89bb9df8ef370b0b686)), closes [#9](https://github.com/Rotorsoft/contui/issues/9)
+
 # 1.0.0 (2026-02-05)
 
 

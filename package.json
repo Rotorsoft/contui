@@ -1,6 +1,6 @@
 {
   "name": "@rotorsoft/contui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Terminal UI for macOS native container management",
   "type": "module",
   "main": "dist/index.js",
