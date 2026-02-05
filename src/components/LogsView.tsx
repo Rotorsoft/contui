@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 
 interface LogsViewProps {
   containerName: string;
@@ -7,7 +7,13 @@ interface LogsViewProps {
   onClose: () => void;
 }
 
-export function LogsView({ containerName, logs, onClose: _ }: LogsViewProps): React.ReactElement {
+export function LogsView({ containerName, logs, onClose }: LogsViewProps): React.ReactElement {
+  useInput((input, key) => {
+    if (key.escape || input === "q") {
+      onClose();
+    }
+  });
+
   const logLines = logs.split("\n").slice(-30);
 
   return (

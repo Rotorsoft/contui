@@ -75,10 +75,11 @@ interface MacOSVolumeJson {
 }
 
 export class ContainerCliService {
-  private async execCommand(args: string): Promise<string> {
+  private async execCommand(args: string, maxBuffer = 10 * 1024 * 1024): Promise<string> {
     try {
       const { stdout } = await execAsync(`${CLI_COMMAND} ${args}`, {
         timeout: 30000,
+        maxBuffer,
       });
       return stdout.trim();
     } catch (error) {

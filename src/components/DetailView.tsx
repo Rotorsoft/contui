@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 
 interface DetailViewProps {
   title: string;
@@ -7,7 +7,13 @@ interface DetailViewProps {
   onClose: () => void;
 }
 
-export function DetailView({ title, data, onClose: _ }: DetailViewProps): React.ReactElement {
+export function DetailView({ title, data, onClose }: DetailViewProps): React.ReactElement {
+  useInput((input, key) => {
+    if (key.escape || input === "q") {
+      onClose();
+    }
+  });
+
   const renderValue = (value: unknown, indent = 0): React.ReactNode => {
     const padding = "  ".repeat(indent);
 
