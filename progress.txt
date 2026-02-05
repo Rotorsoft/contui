@@ -4,3 +4,9 @@ This file tracks AI-assisted development progress.
 Each entry documents: date, feature, decisions, files changed, tests, and concerns.
 
 ---
+
+[2026-02-05] #1 feat: Create TypeScript TUI app for macOS container management
+- Files: package.json, tsconfig.json, eslint.config.js, jest.config.js, .prettierrc, src/types/index.ts, src/services/container-cli.ts, src/services/health-check.ts, src/hooks/useContainerData.ts, src/hooks/useKeyboard.ts, src/components/*.tsx, src/index.tsx, src/__tests__/*.ts
+- Changes: Complete TUI application using Ink (React for CLI) with container/image/network/volume management, vim-style navigation, search/filter, real-time refresh, help overlay
+- Decisions: Used Ink v5 for React-based TUI, wrapped macOS `container` CLI commands, used inverse text for selection highlighting
+- Issues: None - all acceptance criteria met
