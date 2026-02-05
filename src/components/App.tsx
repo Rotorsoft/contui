@@ -102,7 +102,7 @@ export function App(): React.ReactElement {
         case "images": {
           const image = images[selectedIndex];
           if (!image) return;
-          inspectData = await containerCli.inspectImage(image.id);
+          inspectData = await containerCli.inspectImage(image.reference);
           break;
         }
         case "networks": {
@@ -168,7 +168,7 @@ export function App(): React.ReactElement {
       }
       case "images": {
         const i = images[selectedIndex];
-        return i ? { id: i.id, name: `${i.repository}:${i.tag}` } : null;
+        return i ? { id: i.reference, name: `${i.repository}:${i.tag}` } : null;
       }
       case "networks": {
         const n = networks[selectedIndex];

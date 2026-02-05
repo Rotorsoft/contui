@@ -89,9 +89,11 @@ describe("Type definitions", () => {
         tag: "latest",
         size: "142MB",
         created: "2024-01-01",
+        reference: "docker.io/library/nginx:latest",
       };
 
       expect(image.repository).toBe("nginx");
+      expect(image.reference).toBe("docker.io/library/nginx:latest");
       expect(image.tag).toBe("latest");
     });
   });

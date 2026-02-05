@@ -220,6 +220,7 @@ export class ContainerCliService {
       tag,
       size: data.fullSize,
       created: data.descriptor.annotations?.["org.opencontainers.image.created"] || "",
+      reference: data.reference,
     };
   }
 

@@ -23,6 +23,7 @@ export interface Image {
   tag: string;
   size: string;
   created: string;
+  reference: string; // Full reference for CLI commands
 }
 
 export interface Network {
