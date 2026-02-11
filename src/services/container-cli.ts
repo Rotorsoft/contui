@@ -7,6 +7,7 @@ import type {
   Image,
   Network,
   PortMapping,
+  RunContainerOptions,
   Volume,
 } from "../types/index.js";
 
@@ -72,6 +73,35 @@ interface MacOSVolumeJson {
   sizeInBytes?: number;
   createdAt?: number | string; // number from ls, string from inspect
   format?: string;
+}
+
+export function buildRunArgs(options: RunContainerOptions): string {
+  const args = ["run", "--detach"];
+
+  if (options.name?.trim()) {
+    args.push("--name", options.name.trim());
+  }
+
+  if (options.ports) {
+    for (const port of options.ports) {
+      const trimmed = port.trim();
+      if (trimmed) {
+        args.push("--publish", trimmed);
+      }
+    }
+  }
+
+  if (options.env) {
+    for (const envVar of options.env) {
+      const trimmed = envVar.trim();
+      if (trimmed) {
+        args.push("--env", trimmed);
+      }
+    }
+  }
+
+  args.push(options.image.trim());
+  return args.join(" ");
 }
 
 export class ContainerCliService {
@@ -144,6 +174,10 @@ export class ContainerCliService {
     const cfEpoch = new Date("2001-01-01T00:00:00Z").getTime();
     const date = new Date(cfEpoch + timestamp * 1000);
     return date.toISOString();
+  }
+
+  async runContainer(options: RunContainerOptions): Promise<void> {
+    await this.execCommand(buildRunArgs(options));
   }
 
   async startContainer(idOrName: string): Promise<void> {

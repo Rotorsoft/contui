@@ -64,6 +64,13 @@ export interface ContainerDetails extends Container {
   };
 }
 
+export interface RunContainerOptions {
+  image: string;
+  name?: string;
+  ports?: string[]; // "HOST:CONTAINER" format
+  env?: string[]; // "KEY=VALUE" format
+}
+
 export interface HealthStatus {
   cliInstalled: boolean;
   cliVersion?: string;

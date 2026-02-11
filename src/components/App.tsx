@@ -14,14 +14,15 @@ import { LogsView } from "./LogsView.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
 import { CreateDialog } from "./CreateDialog.js";
 import { PullDialog } from "./PullDialog.js";
+import { RunContainerDialog } from "./RunContainerDialog.js";
 import { useContainerData } from "../hooks/useContainerData.js";
 import { useKeyboard } from "../hooks/useKeyboard.js";
 import { useReleaseCheck } from "../hooks/useReleaseCheck.js";
 import { containerCli } from "../services/container-cli.js";
 import { getAppVersion } from "../utils/app-version.js";
-import type { Tab } from "../types/index.js";
+import type { RunContainerOptions, Tab } from "../types/index.js";
 
-type DialogType = "confirm" | "create" | "pull" | "logs" | "inspect" | null;
+type DialogType = "confirm" | "create" | "pull" | "run" | "logs" | "inspect" | null;
 
 const APP_VERSION = getAppVersion();
 
@@ -60,6 +61,7 @@ interface DialogState {
   logs?: string;
   containerName?: string;
   createType?: "network" | "volume";
+  prefilledImage?: string;
 }
 
 export function App(): React.ReactElement {
@@ -238,6 +240,13 @@ export function App(): React.ReactElement {
         return;
       }
 
+      if (action === "run" && (activeTab === "containers" || activeTab === "images")) {
+        const prefilledImage =
+          activeTab === "images" ? images[selectedIndex]?.reference : undefined;
+        setDialog({ type: "run", prefilledImage });
+        return;
+      }
+
       const identifiers = getItemIdentifiers();
       if (!identifiers) return;
 
@@ -319,7 +328,7 @@ export function App(): React.ReactElement {
         setActionError(err instanceof Error ? err.message : "Action failed");
       }
     },
-    [getItemIdentifiers, activeTab, refresh, handleSelect]
+    [getItemIdentifiers, activeTab, refresh, handleSelect, images, selectedIndex]
   );
 
   const handleConfirm = useCallback(async () => {
@@ -370,6 +379,22 @@ export function App(): React.ReactElement {
     [dialog.createType, refresh]
   );
 
+  const handleRunConfirm = useCallback(
+    async (options: RunContainerOptions) => {
+      setDialog({ type: null, data: undefined, logs: undefined });
+      setActionInProgress(`Running ${options.image}...`);
+      try {
+        await containerCli.runContainer(options);
+        await refresh();
+        setActionInProgress(null);
+      } catch (err) {
+        setActionInProgress(null);
+        setActionError(err instanceof Error ? err.message : "Failed to run container");
+      }
+    },
+    [refresh]
+  );
+
   const handleCancel = useCallback(() => {
     setDialog({ type: null, data: undefined, logs: undefined });
   }, []);
@@ -386,6 +411,7 @@ export function App(): React.ReactElement {
     onAction: handleAction,
     isSearchMode: searchMode,
     isDetailView: dialog.type === "logs" || dialog.type === "inspect",
+    isDialogOpen: dialog.type === "confirm" || dialog.type === "create" || dialog.type === "pull" || dialog.type === "run",
     activeTab,
   });
 
@@ -423,6 +449,16 @@ export function App(): React.ReactElement {
       <CreateDialog
         type={dialog.createType}
         onConfirm={handleCreateConfirm}
+        onCancel={handleCancel}
+      />
+    );
+  }
+
+  if (dialog.type === "run") {
+    return (
+      <RunContainerDialog
+        initialImage={dialog.prefilledImage}
+        onConfirm={handleRunConfirm}
         onCancel={handleCancel}
       />
     );

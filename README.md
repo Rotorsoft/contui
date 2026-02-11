@@ -87,6 +87,7 @@ contui
 #### Actions
 | Key | Action |
 |-----|--------|
+| `n` | Run new container (Containers/Images tab) |
 | `s` | Start container |
 | `x` | Stop container |
 | `R` | Restart container |

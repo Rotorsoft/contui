@@ -19,6 +19,7 @@ const HELP_SECTIONS = [
   {
     title: "Container Actions",
     items: [
+      { key: "n", desc: "Run new container" },
       { key: "s", desc: "Start container" },
       { key: "x", desc: "Stop container" },
       { key: "R", desc: "Restart container" },
@@ -30,6 +31,7 @@ const HELP_SECTIONS = [
   {
     title: "Image Actions",
     items: [
+      { key: "n", desc: "Run container from image" },
       { key: "p", desc: "Pull image" },
       { key: "d", desc: "Delete image" },
       { key: "i", desc: "Inspect image" },

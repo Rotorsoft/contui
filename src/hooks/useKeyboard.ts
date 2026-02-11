@@ -14,6 +14,7 @@ interface UseKeyboardOptions {
   onAction: (action: string) => void;
   isSearchMode: boolean;
   isDetailView: boolean;
+  isDialogOpen: boolean;
   activeTab: Tab;
 }
 
@@ -39,12 +40,13 @@ export function useKeyboard(options: UseKeyboardOptions): void {
     onAction,
     isSearchMode,
     isDetailView,
+    isDialogOpen,
     activeTab,
   } = options;
 
   const handleInput = useCallback(
     (input: string, key: { escape?: boolean; return?: boolean; upArrow?: boolean; downArrow?: boolean; tab?: boolean }) => {
-      if (isSearchMode) {
+      if (isSearchMode || isDialogOpen) {
         if (key.escape) {
           onBack();
         }
@@ -157,10 +159,16 @@ export function useKeyboard(options: UseKeyboardOptions): void {
         onAction("create");
         return;
       }
+
+      if (input === "n") {
+        onAction("run");
+        return;
+      }
     },
     [
       isSearchMode,
       isDetailView,
+      isDialogOpen,
       activeTab,
       onQuit,
       onBack,

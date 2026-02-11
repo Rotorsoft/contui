@@ -1,3 +1,84 @@
+import { buildRunArgs } from "../services/container-cli.js";
+
+describe("buildRunArgs", () => {
+  it("should build command with image only", () => {
+    expect(buildRunArgs({ image: "nginx:latest" })).toBe("run --detach nginx:latest");
+  });
+
+  it("should include --name when name is provided", () => {
+    expect(buildRunArgs({ image: "nginx:latest", name: "my-nginx" })).toBe(
+      "run --detach --name my-nginx nginx:latest"
+    );
+  });
+
+  it("should include --publish for port mappings", () => {
+    expect(buildRunArgs({ image: "postgres:latest", ports: ["5433:5432"] })).toBe(
+      "run --detach --publish 5433:5432 postgres:latest"
+    );
+  });
+
+  it("should include multiple --publish flags", () => {
+    expect(buildRunArgs({ image: "nginx:latest", ports: ["8080:80", "8443:443"] })).toBe(
+      "run --detach --publish 8080:80 --publish 8443:443 nginx:latest"
+    );
+  });
+
+  it("should include --env for environment variables", () => {
+    expect(buildRunArgs({ image: "postgres:latest", env: ["POSTGRES_PASSWORD=secret"] })).toBe(
+      "run --detach --env POSTGRES_PASSWORD=secret postgres:latest"
+    );
+  });
+
+  it("should include multiple --env flags", () => {
+    expect(
+      buildRunArgs({
+        image: "postgres:latest",
+        env: ["POSTGRES_PASSWORD=secret", "POSTGRES_DB=mydb"],
+      })
+    ).toBe("run --detach --env POSTGRES_PASSWORD=secret --env POSTGRES_DB=mydb postgres:latest");
+  });
+
+  it("should combine all options", () => {
+    expect(
+      buildRunArgs({
+        image: "postgres:latest",
+        name: "my-pg",
+        ports: ["5433:5432"],
+        env: ["POSTGRES_PASSWORD=secret"],
+      })
+    ).toBe(
+      "run --detach --name my-pg --publish 5433:5432 --env POSTGRES_PASSWORD=secret postgres:latest"
+    );
+  });
+
+  it("should skip empty/whitespace-only name", () => {
+    expect(buildRunArgs({ image: "nginx:latest", name: "  " })).toBe("run --detach nginx:latest");
+  });
+
+  it("should skip empty/whitespace-only ports", () => {
+    expect(buildRunArgs({ image: "nginx:latest", ports: ["", "  "] })).toBe(
+      "run --detach nginx:latest"
+    );
+  });
+
+  it("should skip empty/whitespace-only env vars", () => {
+    expect(buildRunArgs({ image: "nginx:latest", env: ["", "  "] })).toBe(
+      "run --detach nginx:latest"
+    );
+  });
+
+  it("should trim whitespace from all values", () => {
+    expect(
+      buildRunArgs({
+        image: "  nginx:latest  ",
+        name: "  my-nginx  ",
+        ports: ["  8080:80  "],
+        env: ["  FOO=bar  "],
+      })
+    ).toBe("run --detach --name my-nginx --publish 8080:80 --env FOO=bar nginx:latest");
+  });
+});
+
 // Test the type parsing functions by recreating them for macOS container CLI
 describe("ContainerCliService parsing (macOS)", () => {
   const parseStatus = (state: string) => {
