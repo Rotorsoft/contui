@@ -4,7 +4,8 @@ import TextInput from "ink-text-input";
 import type { RunContainerOptions } from "../types/index.js";
 
 interface RunContainerDialogProps {
-  initialImage?: string;
+  initialValues?: { image?: string; name?: string; ports?: string; env?: string };
+  isEdit?: boolean;
   onConfirm: (options: RunContainerOptions) => void;
   onCancel: () => void;
 }
@@ -27,16 +28,17 @@ const FIELD_HINTS: Record<Field, string> = {
 };
 
 export function RunContainerDialog({
-  initialImage = "",
+  initialValues,
+  isEdit,
   onConfirm,
   onCancel,
 }: RunContainerDialogProps): React.ReactElement {
-  const [activeField, setActiveField] = useState<number>(initialImage ? 1 : 0);
+  const [activeField, setActiveField] = useState<number>(initialValues?.image ? 1 : 0);
   const [values, setValues] = useState<Record<Field, string>>({
-    image: initialImage,
-    name: "",
-    ports: "",
-    env: "",
+    image: initialValues?.image ?? "",
+    name: initialValues?.name ?? "",
+    ports: initialValues?.ports ?? "",
+    env: initialValues?.env ?? "",
   });
 
   useInput((_input, key) => {
@@ -84,7 +86,7 @@ export function RunContainerDialog({
     >
       <Box justifyContent="center" marginBottom={1}>
         <Text bold color="yellow">
-          Run Container
+          {isEdit ? "Edit Container" : "Run Container"}
         </Text>
       </Box>
 
@@ -111,7 +113,7 @@ export function RunContainerDialog({
       ))}
 
       <Box marginTop={1}>
-        <Text dimColor>Tab: next field · Enter: run · Esc: cancel</Text>
+        <Text dimColor>Tab: next field · Enter: {isEdit ? "save" : "run"} · Esc: cancel</Text>
       </Box>
     </Box>
   );

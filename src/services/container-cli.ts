@@ -30,7 +30,14 @@ interface MacOSContainerJson {
     initProcess?: {
       arguments?: string[];
       executable?: string;
+      environment?: string[];
     };
+    env?: string[];
+    mounts?: Array<{
+      type?: Record<string, unknown>;
+      source: string;
+      destination: string;
+    }>;
   };
   status: string;
   startedDate?: number;
@@ -234,7 +241,13 @@ export class ContainerCliService {
         entrypoint: data.configuration.initProcess?.executable
           ? [data.configuration.initProcess.executable]
           : undefined,
+        env: data.configuration.initProcess?.environment || data.configuration.env,
       },
+      mounts: data.configuration.mounts?.map(m => ({
+        type: m.type ? Object.keys(m.type)[0] || "unknown" : "unknown",
+        source: m.source,
+        destination: m.destination,
+      })),
     };
   }
 

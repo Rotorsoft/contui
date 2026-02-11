@@ -13,7 +13,7 @@ interface StatusBarProps {
 }
 
 const TAB_ACTIONS: Record<Tab, string> = {
-  containers: "n:run s:start x:stop R:restart d:delete L:logs i:inspect",
+  containers: "n:run e:edit s:start x:stop R:restart d:delete L:logs i:inspect",
   images: "n:run p:pull d:delete i:inspect",
   networks: "c:create d:delete i:inspect",
   volumes: "c:create d:delete i:inspect",

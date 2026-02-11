@@ -164,6 +164,11 @@ export function useKeyboard(options: UseKeyboardOptions): void {
         onAction("run");
         return;
       }
+
+      if (input === "e") {
+        onAction("edit");
+        return;
+      }
     },
     [
       isSearchMode,
