@@ -7,6 +7,7 @@ import type {
   Image,
   Network,
   PortMapping,
+  RunContainerOptions,
   Volume,
 } from "../types/index.js";
 
@@ -29,7 +30,14 @@ interface MacOSContainerJson {
     initProcess?: {
       arguments?: string[];
       executable?: string;
+      environment?: string[];
     };
+    env?: string[];
+    mounts?: Array<{
+      type?: Record<string, unknown>;
+      source: string;
+      destination: string;
+    }>;
   };
   status: string;
   startedDate?: number;
@@ -72,6 +80,35 @@ interface MacOSVolumeJson {
   sizeInBytes?: number;
   createdAt?: number | string; // number from ls, string from inspect
   format?: string;
+}
+
+export function buildRunArgs(options: RunContainerOptions): string {
+  const args = ["run", "--detach"];
+
+  if (options.name?.trim()) {
+    args.push("--name", options.name.trim());
+  }
+
+  if (options.ports) {
+    for (const port of options.ports) {
+      const trimmed = port.trim();
+      if (trimmed) {
+        args.push("--publish", trimmed);
+      }
+    }
+  }
+
+  if (options.env) {
+    for (const envVar of options.env) {
+      const trimmed = envVar.trim();
+      if (trimmed) {
+        args.push("--env", trimmed);
+      }
+    }
+  }
+
+  args.push(options.image.trim());
+  return args.join(" ");
 }
 
 export class ContainerCliService {
@@ -146,6 +183,10 @@ export class ContainerCliService {
     return date.toISOString();
   }
 
+  async runContainer(options: RunContainerOptions): Promise<void> {
+    await this.execCommand(buildRunArgs(options));
+  }
+
   async startContainer(idOrName: string): Promise<void> {
     await this.execCommand(`start ${idOrName}`);
   }
@@ -200,7 +241,13 @@ export class ContainerCliService {
         entrypoint: data.configuration.initProcess?.executable
           ? [data.configuration.initProcess.executable]
           : undefined,
+        env: data.configuration.initProcess?.environment || data.configuration.env,
       },
+      mounts: data.configuration.mounts?.map(m => ({
+        type: m.type ? Object.keys(m.type)[0] || "unknown" : "unknown",
+        source: m.source,
+        destination: m.destination,
+      })),
     };
   }
 

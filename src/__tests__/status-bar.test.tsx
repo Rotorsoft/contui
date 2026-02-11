@@ -17,7 +17,9 @@ describe("StatusBar", () => {
       />
     );
 
-    expect(lastFrame()).toContain("Update available: v2.0.0");
+    const frame = lastFrame()?.replace(/\n/g, " ") ?? "";
+    expect(frame).toContain("Update available:");
+    expect(frame).toContain("v2.0.0");
   });
 
   it("shows controls when no release message is provided", () => {

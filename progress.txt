@@ -34,3 +34,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Restricted npm package contents to dist, added version display and async release check in the UI, and documented npm install/run steps with supporting tests.
 - Decisions: Pulled current version from env/package.json and used npm registry latest endpoint for update checks.
 - Issues: Release workflow may still need updates to publish; requires approval to modify .github/workflows.
+
+[2026-02-11] #12 feat: Add container creation with image selection, port mapping, and naming
+- Files: src/types/index.ts, src/services/container-cli.ts, src/components/RunContainerDialog.tsx, src/components/App.tsx, src/hooks/useKeyboard.ts, src/components/HelpOverlay.tsx, src/__tests__/container-cli.test.ts, README.md
+- Changes: Added `runContainer` CLI method with `buildRunArgs` helper, multi-field RunContainerDialog (image, name, ports, env), `n` shortcut on Containers/Images tabs with image pre-fill from Images tab
+- Decisions: Exported `buildRunArgs` as standalone function for testability; used Tab key to cycle between fields in dialog; comma-separated ports/env input
+- Issues: None

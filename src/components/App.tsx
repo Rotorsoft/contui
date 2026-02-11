@@ -14,14 +14,15 @@ import { LogsView } from "./LogsView.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
 import { CreateDialog } from "./CreateDialog.js";
 import { PullDialog } from "./PullDialog.js";
+import { RunContainerDialog } from "./RunContainerDialog.js";
 import { useContainerData } from "../hooks/useContainerData.js";
 import { useKeyboard } from "../hooks/useKeyboard.js";
 import { useReleaseCheck } from "../hooks/useReleaseCheck.js";
 import { containerCli } from "../services/container-cli.js";
 import { getAppVersion } from "../utils/app-version.js";
-import type { Tab } from "../types/index.js";
+import type { RunContainerOptions, Tab } from "../types/index.js";
 
-type DialogType = "confirm" | "create" | "pull" | "logs" | "inspect" | null;
+type DialogType = "confirm" | "create" | "pull" | "run" | "logs" | "inspect" | null;
 
 const APP_VERSION = getAppVersion();
 
@@ -60,6 +61,8 @@ interface DialogState {
   logs?: string;
   containerName?: string;
   createType?: "network" | "volume";
+  initialValues?: { image?: string; name?: string; ports?: string; env?: string };
+  editContainerId?: string;
 }
 
 export function App(): React.ReactElement {
@@ -129,9 +132,24 @@ export function App(): React.ReactElement {
         case "containers": {
           const container = containers[selectedIndex];
           if (!container) return;
-          inspectData = (await containerCli.inspectContainer(
-            container.id
-          )) as unknown as Record<string, unknown>;
+          const details = await containerCli.inspectContainer(container.id);
+          const curated: Record<string, unknown> = {
+            id: details.id,
+            image: details.image,
+            status: details.state,
+            created: details.created,
+            command: details.command || undefined,
+            entrypoint: details.config?.entrypoint || undefined,
+            env: details.config?.env || undefined,
+            ports: details.ports.length > 0
+              ? details.ports.map(p => `${p.hostPort}:${p.containerPort}/${p.protocol}`)
+              : undefined,
+            network: details.networkSettings?.ipAddress
+              ? { ip: details.networkSettings.ipAddress, gateway: details.networkSettings.gateway }
+              : undefined,
+            mounts: details.mounts?.length ? details.mounts : undefined,
+          };
+          inspectData = Object.fromEntries(Object.entries(curated).filter(([, v]) => v !== undefined));
           break;
         }
         case "images": {
@@ -158,7 +176,10 @@ export function App(): React.ReactElement {
         }
       }
 
-      setDialog({ type: "inspect", data: truncateData(inspectData) as Record<string, unknown> });
+      setDialog({
+        type: "inspect",
+        data: activeTab === "containers" ? inspectData : truncateData(inspectData) as Record<string, unknown>,
+      });
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to inspect");
     }
@@ -235,6 +256,41 @@ export function App(): React.ReactElement {
           type: "create",
           createType: activeTab === "networks" ? "network" : "volume",
         });
+        return;
+      }
+
+      if (action === "run" && (activeTab === "containers" || activeTab === "images")) {
+        const image =
+          activeTab === "images" ? images[selectedIndex]?.reference : undefined;
+        setDialog({ type: "run", initialValues: image ? { image } : undefined });
+        return;
+      }
+
+      if (action === "edit" && activeTab === "containers") {
+        const container = containers[selectedIndex];
+        if (!container) return;
+        try {
+          setActionInProgress("Loading container settings...");
+          const details = await containerCli.inspectContainer(container.id);
+          setActionInProgress(null);
+          const ports = details.ports
+            .map((p) => `${p.hostPort}:${p.containerPort}`)
+            .join(", ");
+          const env = details.config?.env?.join(", ") ?? "";
+          setDialog({
+            type: "run",
+            initialValues: {
+              image: details.image,
+              name: details.name,
+              ports,
+              env,
+            },
+            editContainerId: container.id,
+          });
+        } catch (err) {
+          setActionInProgress(null);
+          setActionError(err instanceof Error ? err.message : "Failed to inspect container");
+        }
         return;
       }
 
@@ -319,7 +375,7 @@ export function App(): React.ReactElement {
         setActionError(err instanceof Error ? err.message : "Action failed");
       }
     },
-    [getItemIdentifiers, activeTab, refresh, handleSelect]
+    [getItemIdentifiers, activeTab, refresh, handleSelect, images, selectedIndex, containers]
   );
 
   const handleConfirm = useCallback(async () => {
@@ -370,6 +426,29 @@ export function App(): React.ReactElement {
     [dialog.createType, refresh]
   );
 
+  const handleRunConfirm = useCallback(
+    async (options: RunContainerOptions) => {
+      const editId = dialog.editContainerId;
+      setDialog({ type: null, data: undefined, logs: undefined });
+      try {
+        if (editId) {
+          setActionInProgress("Recreating container...");
+          await containerCli.stopContainer(editId).catch(() => {});
+          await containerCli.removeContainer(editId);
+        } else {
+          setActionInProgress(`Running ${options.image}...`);
+        }
+        await containerCli.runContainer(options);
+        await refresh();
+        setActionInProgress(null);
+      } catch (err) {
+        setActionInProgress(null);
+        setActionError(err instanceof Error ? err.message : "Failed to run container");
+      }
+    },
+    [dialog.editContainerId, refresh]
+  );
+
   const handleCancel = useCallback(() => {
     setDialog({ type: null, data: undefined, logs: undefined });
   }, []);
@@ -386,6 +465,7 @@ export function App(): React.ReactElement {
     onAction: handleAction,
     isSearchMode: searchMode,
     isDetailView: dialog.type === "logs" || dialog.type === "inspect",
+    isDialogOpen: dialog.type === "confirm" || dialog.type === "create" || dialog.type === "pull" || dialog.type === "run",
     activeTab,
   });
 
@@ -423,6 +503,17 @@ export function App(): React.ReactElement {
       <CreateDialog
         type={dialog.createType}
         onConfirm={handleCreateConfirm}
+        onCancel={handleCancel}
+      />
+    );
+  }
+
+  if (dialog.type === "run") {
+    return (
+      <RunContainerDialog
+        initialValues={dialog.initialValues}
+        isEdit={!!dialog.editContainerId}
+        onConfirm={handleRunConfirm}
         onCancel={handleCancel}
       />
     );
