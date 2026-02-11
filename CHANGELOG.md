@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/Rotorsoft/contui/compare/v1.0.1...v1.1.0) (2026-02-11)
+
+
+### Bug Fixes
+
+* allow container creation ([0e04586](https://github.com/Rotorsoft/contui/commit/0e045861d18da29eba787117dccc82c095a43889))
+
+
+### Features
+
+* add container creation with image selection, port mapping, and naming ([5292a86](https://github.com/Rotorsoft/contui/commit/5292a86985071da078166b5e5dc26c2484fdf94f)), closes [#12](https://github.com/Rotorsoft/contui/issues/12)
+
 ## [1.0.1](https://github.com/Rotorsoft/contui/compare/v1.0.0...v1.0.1) (2026-02-05)
 
 
