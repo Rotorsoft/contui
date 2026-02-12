@@ -14,15 +14,6 @@ export function ImagesView({
   selectedIndex,
   searchQuery,
 }: ImagesViewProps): React.ReactElement {
-  const filteredImages = images
-    .filter(
-      (img) =>
-        !searchQuery ||
-        img.repository.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        img.tag.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => a.repository.localeCompare(b.repository));
-
   const columns = [
     { key: "repository", header: "REPOSITORY", width: 35 },
     { key: "tag", header: "TAG", width: 20 },
@@ -40,7 +31,7 @@ export function ImagesView({
       )}
       <Table
         columns={columns}
-        data={filteredImages}
+        data={images}
         selectedIndex={selectedIndex}
         emptyMessage="No images found"
       />

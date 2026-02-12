@@ -36,9 +36,12 @@ function makeVolume(name: string): Volume {
   return { name, driver: "local", mountpoint: `/var/${name}`, scope: "local" };
 }
 
+// Sorting and filtering now happens in App.tsx before data reaches view components.
+// These tests verify that pre-sorted data renders in the correct order.
+
 describe("List sorting", () => {
-  it("sorts containers alphabetically by name", () => {
-    const containers = [makeContainer("zebra"), makeContainer("alpha"), makeContainer("mango")];
+  it("renders containers in the order provided (sorted by App)", () => {
+    const containers = [makeContainer("alpha"), makeContainer("mango"), makeContainer("zebra")];
     const { lastFrame } = render(
       <ContainersView containers={containers} selectedIndex={0} searchQuery="" />
     );
@@ -50,8 +53,8 @@ describe("List sorting", () => {
     expect(mangoIdx).toBeLessThan(zebraIdx);
   });
 
-  it("sorts images alphabetically by repository", () => {
-    const images = [makeImage("zookeeper"), makeImage("alpine"), makeImage("nginx")];
+  it("renders images in the order provided (sorted by App)", () => {
+    const images = [makeImage("alpine"), makeImage("nginx"), makeImage("zookeeper")];
     const { lastFrame } = render(
       <ImagesView images={images} selectedIndex={0} searchQuery="" />
     );
@@ -63,8 +66,8 @@ describe("List sorting", () => {
     expect(nginxIdx).toBeLessThan(zookeeperIdx);
   });
 
-  it("sorts networks alphabetically by name", () => {
-    const networks = [makeNetwork("zoo-net"), makeNetwork("app-net"), makeNetwork("db-net")];
+  it("renders networks in the order provided (sorted by App)", () => {
+    const networks = [makeNetwork("app-net"), makeNetwork("db-net"), makeNetwork("zoo-net")];
     const { lastFrame } = render(
       <NetworksView networks={networks} selectedIndex={0} searchQuery="" />
     );
@@ -76,8 +79,8 @@ describe("List sorting", () => {
     expect(dbIdx).toBeLessThan(zooIdx);
   });
 
-  it("sorts volumes alphabetically by name", () => {
-    const volumes = [makeVolume("z-vol"), makeVolume("a-vol"), makeVolume("m-vol")];
+  it("renders volumes in the order provided (sorted by App)", () => {
+    const volumes = [makeVolume("a-vol"), makeVolume("m-vol"), makeVolume("z-vol")];
     const { lastFrame } = render(
       <VolumesView volumes={volumes} selectedIndex={0} searchQuery="" />
     );
@@ -89,8 +92,9 @@ describe("List sorting", () => {
     expect(mIdx).toBeLessThan(zIdx);
   });
 
-  it("sorts containers after filtering", () => {
-    const containers = [makeContainer("zebra-app"), makeContainer("alpha-app"), makeContainer("no-match")];
+  it("renders pre-filtered containers without excluded items", () => {
+    // App.tsx filters and sorts before passing to view
+    const containers = [makeContainer("alpha-app"), makeContainer("zebra-app")];
     const { lastFrame } = render(
       <ContainersView containers={containers} selectedIndex={0} searchQuery="app" />
     );
