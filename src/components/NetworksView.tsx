@@ -14,13 +14,6 @@ export function NetworksView({
   selectedIndex,
   searchQuery,
 }: NetworksViewProps): React.ReactElement {
-  const filteredNetworks = networks.filter(
-    (net) =>
-      !searchQuery ||
-      net.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      net.driver.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const columns = [
     { key: "id", header: "NETWORK ID", width: 15 },
     { key: "name", header: "NAME", width: 30 },
@@ -37,7 +30,7 @@ export function NetworksView({
       )}
       <Table
         columns={columns}
-        data={filteredNetworks}
+        data={networks}
         selectedIndex={selectedIndex}
         emptyMessage="No networks found"
       />

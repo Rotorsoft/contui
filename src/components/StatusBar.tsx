@@ -12,12 +12,85 @@ interface StatusBarProps {
   releaseStatus?: ReleaseCheckState | null;
 }
 
-const TAB_ACTIONS: Record<Tab, string> = {
-  containers: "n:run e:edit s:start x:stop R:restart d:delete L:logs i:inspect",
-  images: "n:run p:pull d:delete i:inspect",
-  networks: "c:create d:delete i:inspect",
-  volumes: "c:create d:delete i:inspect",
+interface Action {
+  key: string;
+  label: string;
+}
+
+const TAB_ACTIONS: Record<Tab, Action[]> = {
+  containers: [
+    { key: "c", label: "create" },
+    { key: "e", label: "edit" },
+    { key: "s", label: "start" },
+    { key: "o", label: "stop" },
+    { key: "R", label: "Restart" },
+    { key: "d", label: "delete" },
+    { key: "L", label: "Logs" },
+    { key: "i", label: "inspect" },
+  ],
+  images: [
+    { key: "c", label: "create" },
+    { key: "p", label: "pull" },
+    { key: "d", label: "delete" },
+    { key: "i", label: "inspect" },
+  ],
+  networks: [
+    { key: "c", label: "create" },
+    { key: "d", label: "delete" },
+    { key: "i", label: "inspect" },
+  ],
+  volumes: [
+    { key: "c", label: "create" },
+    { key: "d", label: "delete" },
+    { key: "i", label: "inspect" },
+  ],
 };
+
+export function renderAction({ key, label }: Action, dim = false): React.ReactElement {
+  const idx = label.indexOf(key);
+  if (idx === -1) {
+    return <Text dimColor={dim}><Text color="yellow" underline>{key}</Text>:{label}</Text>;
+  }
+  const before = label.slice(0, idx);
+  const after = label.slice(idx + 1);
+  return (
+    <Text dimColor={dim}>
+      {before}<Text color="yellow" underline>{label[idx]}</Text>{after}
+    </Text>
+  );
+}
+
+function renderActions(actions: Action[]): React.ReactElement {
+  return (
+    <Text>
+      {actions.map((action, i) => (
+        <Text key={action.key}>
+          {i > 0 ? " " : ""}{renderAction(action)}
+        </Text>
+      ))}
+    </Text>
+  );
+}
+
+const GLOBAL_ACTIONS: Action[] = [
+  { key: "/", label: "/search" },
+  { key: "r", label: "refresh" },
+  { key: "?", label: "?help" },
+  { key: "q", label: "quit" },
+];
+
+function renderGlobalActions(): React.ReactElement {
+  return (
+    <Text>
+      <Text dimColor>hjkl:nav</Text>
+      {GLOBAL_ACTIONS.map((action) => (
+        <Text key={action.key}>
+          {" "}{renderAction(action, true)}
+        </Text>
+      ))}
+    </Text>
+  );
+}
 
 function renderReleaseStatus(releaseStatus?: ReleaseCheckState | null): React.ReactNode {
   if (!releaseStatus) return null;
@@ -64,13 +137,9 @@ export function StatusBar({
   return (
     <Box borderStyle="single" paddingX={1} justifyContent="space-between">
       <Text>
-        <Text color="cyan">{itemCount}</Text> {activeTab} | {TAB_ACTIONS[activeTab]}
+        <Text color="cyan">{itemCount}</Text> {activeTab} | {renderActions(TAB_ACTIONS[activeTab])}
       </Text>
-      {releaseContent ?? (
-        <Text dimColor>
-          h/l:tabs j/k:navigate /:search r:refresh ?:help q:quit
-        </Text>
-      )}
+      {releaseContent ?? renderGlobalActions()}
     </Box>
   );
 }

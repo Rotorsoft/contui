@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Box, Text, useApp } from "ink";
 import Spinner from "ink-spinner";
 import { TabBar } from "./TabBar.js";
@@ -80,20 +80,73 @@ export function App(): React.ReactElement {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
+  const sortedContainers = useMemo(
+    () =>
+      containers
+        .filter(
+          (c) =>
+            !searchQuery ||
+            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.image.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.status.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [containers, searchQuery]
+  );
+
+  const sortedImages = useMemo(
+    () =>
+      images
+        .filter(
+          (img) =>
+            !searchQuery ||
+            img.repository.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            img.tag.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => a.repository.localeCompare(b.repository)),
+    [images, searchQuery]
+  );
+
+  const sortedNetworks = useMemo(
+    () =>
+      networks
+        .filter(
+          (net) =>
+            !searchQuery ||
+            net.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            net.driver.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [networks, searchQuery]
+  );
+
+  const sortedVolumes = useMemo(
+    () =>
+      volumes
+        .filter(
+          (vol) =>
+            !searchQuery ||
+            vol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            vol.driver.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [volumes, searchQuery]
+  );
+
   const getItemCount = useCallback((): number => {
     switch (activeTab) {
       case "containers":
-        return containers.length;
+        return sortedContainers.length;
       case "images":
-        return images.length;
+        return sortedImages.length;
       case "networks":
-        return networks.length;
+        return sortedNetworks.length;
       case "volumes":
-        return volumes.length;
+        return sortedVolumes.length;
       default:
         return 0;
     }
-  }, [activeTab, containers.length, images.length, networks.length, volumes.length]);
+  }, [activeTab, sortedContainers.length, sortedImages.length, sortedNetworks.length, sortedVolumes.length]);
 
   const handleQuit = useCallback(() => {
     exit();
@@ -130,7 +183,7 @@ export function App(): React.ReactElement {
 
       switch (activeTab) {
         case "containers": {
-          const container = containers[selectedIndex];
+          const container = sortedContainers[selectedIndex];
           if (!container) return;
           const details = await containerCli.inspectContainer(container.id);
           const curated: Record<string, unknown> = {
@@ -153,13 +206,13 @@ export function App(): React.ReactElement {
           break;
         }
         case "images": {
-          const image = images[selectedIndex];
+          const image = sortedImages[selectedIndex];
           if (!image) return;
           inspectData = await containerCli.inspectImage(image.reference);
           break;
         }
         case "networks": {
-          const network = networks[selectedIndex];
+          const network = sortedNetworks[selectedIndex];
           if (!network) return;
           inspectData = (await containerCli.inspectNetwork(
             network.id
@@ -167,7 +220,7 @@ export function App(): React.ReactElement {
           break;
         }
         case "volumes": {
-          const volume = volumes[selectedIndex];
+          const volume = sortedVolumes[selectedIndex];
           if (!volume) return;
           inspectData = (await containerCli.inspectVolume(
             volume.name
@@ -183,7 +236,7 @@ export function App(): React.ReactElement {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to inspect");
     }
-  }, [activeTab, selectedIndex, containers, images, networks, volumes]);
+  }, [activeTab, selectedIndex, sortedContainers, sortedImages, sortedNetworks, sortedVolumes]);
 
   const handleBack = useCallback(() => {
     setActionError(null);
@@ -222,25 +275,25 @@ export function App(): React.ReactElement {
   const getItemIdentifiers = useCallback(() => {
     switch (activeTab) {
       case "containers": {
-        const c = containers[selectedIndex];
+        const c = sortedContainers[selectedIndex];
         return c ? { id: c.id, name: c.name } : null;
       }
       case "images": {
-        const i = images[selectedIndex];
+        const i = sortedImages[selectedIndex];
         return i ? { id: i.reference, name: `${i.repository}:${i.tag}` } : null;
       }
       case "networks": {
-        const n = networks[selectedIndex];
+        const n = sortedNetworks[selectedIndex];
         return n ? { id: n.id, name: n.name } : null;
       }
       case "volumes": {
-        const v = volumes[selectedIndex];
+        const v = sortedVolumes[selectedIndex];
         return v ? { id: v.name, name: v.name } : null;
       }
       default:
         return null;
     }
-  }, [activeTab, selectedIndex, containers, images, networks, volumes]);
+  }, [activeTab, selectedIndex, sortedContainers, sortedImages, sortedNetworks, sortedVolumes]);
 
   const handleAction = useCallback(
     async (action: string) => {
@@ -251,23 +304,22 @@ export function App(): React.ReactElement {
         return;
       }
 
-      if (action === "create" && (activeTab === "networks" || activeTab === "volumes")) {
-        setDialog({
-          type: "create",
-          createType: activeTab === "networks" ? "network" : "volume",
-        });
-        return;
-      }
-
-      if (action === "run" && (activeTab === "containers" || activeTab === "images")) {
-        const image =
-          activeTab === "images" ? images[selectedIndex]?.reference : undefined;
-        setDialog({ type: "run", initialValues: image ? { image } : undefined });
+      if (action === "create") {
+        if (activeTab === "networks" || activeTab === "volumes") {
+          setDialog({
+            type: "create",
+            createType: activeTab === "networks" ? "network" : "volume",
+          });
+        } else if (activeTab === "containers" || activeTab === "images") {
+          const image =
+            activeTab === "images" ? sortedImages[selectedIndex]?.reference : undefined;
+          setDialog({ type: "run", initialValues: image ? { image } : undefined });
+        }
         return;
       }
 
       if (action === "edit" && activeTab === "containers") {
-        const container = containers[selectedIndex];
+        const container = sortedContainers[selectedIndex];
         if (!container) return;
         try {
           setActionInProgress("Loading container settings...");
@@ -375,7 +427,7 @@ export function App(): React.ReactElement {
         setActionError(err instanceof Error ? err.message : "Action failed");
       }
     },
-    [getItemIdentifiers, activeTab, refresh, handleSelect, images, selectedIndex, containers]
+    [getItemIdentifiers, activeTab, refresh, handleSelect, sortedImages, selectedIndex, sortedContainers]
   );
 
   const handleConfirm = useCallback(async () => {
@@ -557,28 +609,28 @@ export function App(): React.ReactElement {
       <Box flexDirection="column" flexGrow={1}>
         {activeTab === "containers" && (
           <ContainersView
-            containers={containers}
+            containers={sortedContainers}
             selectedIndex={selectedIndex}
             searchQuery={searchQuery}
           />
         )}
         {activeTab === "images" && (
           <ImagesView
-            images={images}
+            images={sortedImages}
             selectedIndex={selectedIndex}
             searchQuery={searchQuery}
           />
         )}
         {activeTab === "networks" && (
           <NetworksView
-            networks={networks}
+            networks={sortedNetworks}
             selectedIndex={selectedIndex}
             searchQuery={searchQuery}
           />
         )}
         {activeTab === "volumes" && (
           <VolumesView
-            volumes={volumes}
+            volumes={sortedVolumes}
             selectedIndex={selectedIndex}
             searchQuery={searchQuery}
           />

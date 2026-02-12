@@ -111,7 +111,7 @@ export function useKeyboard(options: UseKeyboardOptions): void {
         return;
       }
 
-      if (input === "x") {
+      if (input === "o") {
         onAction("stop");
         return;
       }
@@ -157,11 +157,6 @@ export function useKeyboard(options: UseKeyboardOptions): void {
 
       if (input === "c") {
         onAction("create");
-        return;
-      }
-
-      if (input === "n") {
-        onAction("run");
         return;
       }
 

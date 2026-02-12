@@ -40,3 +40,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Added `runContainer` CLI method with `buildRunArgs` helper, multi-field RunContainerDialog (image, name, ports, env), `n` shortcut on Containers/Images tabs with image pre-fill from Images tab
 - Decisions: Exported `buildRunArgs` as standalone function for testability; used Tab key to cycle between fields in dialog; comma-separated ports/env input
 - Issues: None
+
+[2026-02-12] #14 feat: Sort lists by name and simplify status bar command display
+- Files: src/components/ContainersView.tsx, ImagesView.tsx, NetworksView.tsx, VolumesView.tsx, StatusBar.tsx, HelpOverlay.tsx, src/hooks/useKeyboard.ts, src/components/App.tsx, src/__tests__/sorting.test.tsx, src/__tests__/status-bar.test.tsx
+- Changes: Added alphabetical sorting to all list views, refactored status bar to use highlighted shortcut format (inverse text), renamed `n:run` to `c:create` across keyboard handler, action handler, and help overlay
+- Decisions: Used `<Text inverse>` for shortcut highlighting; merged "run" and "create" actions under single "create" action routed by active tab; label "exit" for stop action to embed "x" shortcut
+- Issues: None

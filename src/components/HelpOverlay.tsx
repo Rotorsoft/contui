@@ -19,10 +19,10 @@ const HELP_SECTIONS = [
   {
     title: "Container Actions",
     items: [
-      { key: "n", desc: "Run new container" },
+      { key: "c", desc: "Create new container" },
       { key: "e", desc: "Edit container" },
       { key: "s", desc: "Start container" },
-      { key: "x", desc: "Stop container" },
+      { key: "o", desc: "Stop container" },
       { key: "R", desc: "Restart container" },
       { key: "d", desc: "Delete (remove)" },
       { key: "L", desc: "View logs" },
@@ -32,7 +32,7 @@ const HELP_SECTIONS = [
   {
     title: "Image Actions",
     items: [
-      { key: "n", desc: "Run container from image" },
+      { key: "c", desc: "Create container from image" },
       { key: "p", desc: "Pull image" },
       { key: "d", desc: "Delete image" },
       { key: "i", desc: "Inspect image" },

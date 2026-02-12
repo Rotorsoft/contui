@@ -14,13 +14,6 @@ export function VolumesView({
   selectedIndex,
   searchQuery,
 }: VolumesViewProps): React.ReactElement {
-  const filteredVolumes = volumes.filter(
-    (vol) =>
-      !searchQuery ||
-      vol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vol.driver.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const columns = [
     { key: "name", header: "VOLUME NAME", width: 35 },
     { key: "driver", header: "DRIVER", width: 15 },
@@ -37,7 +30,7 @@ export function VolumesView({
       )}
       <Table
         columns={columns}
-        data={filteredVolumes}
+        data={volumes}
         selectedIndex={selectedIndex}
         emptyMessage="No volumes found"
       />

@@ -34,14 +34,6 @@ export function ContainersView({
   selectedIndex,
   searchQuery,
 }: ContainersViewProps): React.ReactElement {
-  const filteredContainers = containers.filter(
-    (c) =>
-      !searchQuery ||
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.image.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const columns = [
     { key: "name", header: "NAME", width: 25 },
     { key: "image", header: "IMAGE", width: 30 },
@@ -69,7 +61,7 @@ export function ContainersView({
       )}
       <Table
         columns={columns}
-        data={filteredContainers}
+        data={containers}
         selectedIndex={selectedIndex}
         emptyMessage="No containers found"
       />
