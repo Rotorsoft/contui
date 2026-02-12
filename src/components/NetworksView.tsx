@@ -14,12 +14,14 @@ export function NetworksView({
   selectedIndex,
   searchQuery,
 }: NetworksViewProps): React.ReactElement {
-  const filteredNetworks = networks.filter(
-    (net) =>
-      !searchQuery ||
-      net.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      net.driver.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNetworks = networks
+    .filter(
+      (net) =>
+        !searchQuery ||
+        net.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        net.driver.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const columns = [
     { key: "id", header: "NETWORK ID", width: 15 },

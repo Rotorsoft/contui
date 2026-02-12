@@ -34,13 +34,15 @@ export function ContainersView({
   selectedIndex,
   searchQuery,
 }: ContainersViewProps): React.ReactElement {
-  const filteredContainers = containers.filter(
-    (c) =>
-      !searchQuery ||
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.image.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredContainers = containers
+    .filter(
+      (c) =>
+        !searchQuery ||
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.image.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.status.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const columns = [
     { key: "name", header: "NAME", width: 25 },

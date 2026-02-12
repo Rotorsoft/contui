@@ -14,12 +14,14 @@ export function VolumesView({
   selectedIndex,
   searchQuery,
 }: VolumesViewProps): React.ReactElement {
-  const filteredVolumes = volumes.filter(
-    (vol) =>
-      !searchQuery ||
-      vol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vol.driver.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredVolumes = volumes
+    .filter(
+      (vol) =>
+        !searchQuery ||
+        vol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vol.driver.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const columns = [
     { key: "name", header: "VOLUME NAME", width: 35 },

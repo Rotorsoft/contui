@@ -251,18 +251,17 @@ export function App(): React.ReactElement {
         return;
       }
 
-      if (action === "create" && (activeTab === "networks" || activeTab === "volumes")) {
-        setDialog({
-          type: "create",
-          createType: activeTab === "networks" ? "network" : "volume",
-        });
-        return;
-      }
-
-      if (action === "run" && (activeTab === "containers" || activeTab === "images")) {
-        const image =
-          activeTab === "images" ? images[selectedIndex]?.reference : undefined;
-        setDialog({ type: "run", initialValues: image ? { image } : undefined });
+      if (action === "create") {
+        if (activeTab === "networks" || activeTab === "volumes") {
+          setDialog({
+            type: "create",
+            createType: activeTab === "networks" ? "network" : "volume",
+          });
+        } else if (activeTab === "containers" || activeTab === "images") {
+          const image =
+            activeTab === "images" ? images[selectedIndex]?.reference : undefined;
+          setDialog({ type: "run", initialValues: image ? { image } : undefined });
+        }
         return;
       }
 

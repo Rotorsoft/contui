@@ -160,11 +160,6 @@ export function useKeyboard(options: UseKeyboardOptions): void {
         return;
       }
 
-      if (input === "n") {
-        onAction("run");
-        return;
-      }
-
       if (input === "e") {
         onAction("edit");
         return;
