@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/Rotorsoft/contui/compare/v1.1.0...v1.2.0) (2026-02-12)
+
+
+### Bug Fixes
+
+* lift sorting and filtering to parent so selected index matches display ([dbb858a](https://github.com/Rotorsoft/contui/commit/dbb858a4ccc6719789d0bf79a531d768179c6d6b)), closes [#14](https://github.com/Rotorsoft/contui/issues/14)
+
+
+### Features
+
+* rebind stop container shortcut from 'x' to 'o' ([b35dd94](https://github.com/Rotorsoft/contui/commit/b35dd945482fbcc50fb74e982fd59429db88519e))
+* sort lists by name and simplify status bar command display ([967e5d0](https://github.com/Rotorsoft/contui/commit/967e5d0328d459234e1c592fea616a96880f248c)), closes [#14](https://github.com/Rotorsoft/contui/issues/14)
+
 # [1.1.0](https://github.com/Rotorsoft/contui/compare/v1.0.1...v1.1.0) (2026-02-11)
 
 
