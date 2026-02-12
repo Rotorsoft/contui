@@ -22,7 +22,7 @@ const HELP_SECTIONS = [
       { key: "c", desc: "Create new container" },
       { key: "e", desc: "Edit container" },
       { key: "s", desc: "Start container" },
-      { key: "x", desc: "Stop container" },
+      { key: "o", desc: "Stop container" },
       { key: "R", desc: "Restart container" },
       { key: "d", desc: "Delete (remove)" },
       { key: "L", desc: "View logs" },

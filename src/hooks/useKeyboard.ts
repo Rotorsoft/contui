@@ -111,7 +111,7 @@ export function useKeyboard(options: UseKeyboardOptions): void {
         return;
       }
 
-      if (input === "x") {
+      if (input === "o") {
         onAction("stop");
         return;
       }
