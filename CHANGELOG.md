@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/Rotorsoft/contui/compare/v1.2.0...v1.3.0) (2026-02-13)
+
+
+### Features
+
+* display human-readable relative dates in container and image views ([1930455](https://github.com/Rotorsoft/contui/commit/1930455d4b60fbadadaa6bf6968800e6841a673f)), closes [#16](https://github.com/Rotorsoft/contui/issues/16)
+
 # [1.2.0](https://github.com/Rotorsoft/contui/compare/v1.1.0...v1.2.0) (2026-02-12)
 
 
