@@ -46,3 +46,9 @@ Each entry documents: date, feature, decisions, files changed, tests, and concer
 - Changes: Added alphabetical sorting to all list views, refactored status bar to use highlighted shortcut format (inverse text), renamed `n:run` to `c:create` across keyboard handler, action handler, and help overlay
 - Decisions: Used `<Text inverse>` for shortcut highlighting; merged "run" and "create" actions under single "create" action routed by active tab; label "exit" for stop action to embed "x" shortcut
 - Issues: None
+
+[2026-02-13] #16 feat: Display human-readable relative dates in container, image, and volume views
+- Files: src/utils/format-date.ts, src/__tests__/format-date.test.ts, src/components/ContainersView.tsx, src/components/ImagesView.tsx, src/components/DetailView.tsx
+- Changes: Created `formatRelativeDate` utility that shows "just now", "X minutes/hours/days ago" for recent dates and short date format for older dates. Applied in ContainersView, ImagesView (via column render functions), and DetailView (auto-detects ISO date strings).
+- Decisions: Added optional `now` parameter for testability instead of fake timers; used UTC timezone for short date fallback to avoid locale issues; kept raw ISO strings in data model, format only at display time
+- Issues: None

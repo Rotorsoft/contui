@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Text } from "ink";
 import { Table } from "./Table.js";
 import type { Image } from "../types/index.js";
+import { formatRelativeDate } from "../utils/format-date.js";
 
 interface ImagesViewProps {
   images: Image[];
@@ -19,7 +20,12 @@ export function ImagesView({
     { key: "tag", header: "TAG", width: 20 },
     { key: "id", header: "IMAGE ID", width: 15 },
     { key: "size", header: "SIZE", width: 12 },
-    { key: "created", header: "CREATED", width: 20 },
+    {
+      key: "created",
+      header: "CREATED",
+      width: 20,
+      render: (i: Image) => formatRelativeDate(i.created),
+    },
   ];
 
   return (

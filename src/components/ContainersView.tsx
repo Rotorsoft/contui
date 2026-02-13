@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Text } from "ink";
 import { Table } from "./Table.js";
 import type { Container, ContainerStatus } from "../types/index.js";
+import { formatRelativeDate } from "../utils/format-date.js";
 
 interface ContainersViewProps {
   containers: Container[];
@@ -49,7 +50,12 @@ export function ContainersView({
       width: 20,
       render: (c: Container) => formatPorts(c),
     },
-    { key: "created", header: "CREATED", width: 20 },
+    {
+      key: "created",
+      header: "CREATED",
+      width: 20,
+      render: (c: Container) => formatRelativeDate(c.created),
+    },
   ];
 
   return (

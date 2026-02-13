@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Text } from "ink";
+import { formatRelativeDate } from "../utils/format-date.js";
 
 interface DetailViewProps {
   title: string;
@@ -24,10 +25,13 @@ export function DetailView({ title, data }: DetailViewProps): React.ReactElement
     }
 
     if (typeof value === "string") {
-      if (value.length > 50) {
-        return <Text color="green">"{value.substring(0, 50)}..."</Text>;
+      const display = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)
+        ? formatRelativeDate(value)
+        : value;
+      if (display.length > 50) {
+        return <Text color="green">"{display.substring(0, 50)}..."</Text>;
       }
-      return <Text color="green">"{value}"</Text>;
+      return <Text color="green">"{display}"</Text>;
     }
 
     if (Array.isArray(value)) {
