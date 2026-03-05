@@ -112,6 +112,10 @@ export function buildRunArgs(options: RunContainerOptions): string {
 }
 
 export class ContainerCliService {
+  async execCommandPublic(args: string, maxBuffer = 10 * 1024 * 1024): Promise<string> {
+    return this.execCommand(args, maxBuffer);
+  }
+
   private async execCommand(args: string, maxBuffer = 10 * 1024 * 1024): Promise<string> {
     try {
       const { stdout } = await execAsync(`${CLI_COMMAND} ${args}`, {
