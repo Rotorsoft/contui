@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/Rotorsoft/contui/compare/v1.3.0...v1.4.0) (2026-03-05)
+
+
+### Features
+
+* add `up` and `down` commands for compose file support ([aed3f51](https://github.com/Rotorsoft/contui/commit/aed3f5155417f505bfabb87af3cba055fb91fde9))
+
 # [1.3.0](https://github.com/Rotorsoft/contui/compare/v1.2.0...v1.3.0) (2026-02-13)
 
 
